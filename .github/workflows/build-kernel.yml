@@ -45,9 +45,7 @@ jobs:
         run: |
           git clone -b uvite https://github.com/AOSPA/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel
-          cd common
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-          cd ..
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
