@@ -12,32 +12,58 @@ jobs:
     steps:
       - name: "Setup build environment"
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, sync, and build"
-        run: repo init -u https://github.com/pa-gr/kernel_manifest -b android12-5.10-marble --depth=1 && repo sync && ./build.sh -t -c && mv aospa-gki-marble-*.zip aospa-gki-kernel.zip
+      - name: "Clone repo, build kernel"
+        run: |
+          git clone -b uvite https://github.com/AOSPA/android_device_xiaomi_marble-kernel.git
+          cd android_device_xiaomi_marble-kernel
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make defconfig
+          make -j$(nproc)
+          mkdir release
+          cp arch/arm64/boot/Image.gz-dtb release/
+          cd release
+          zip -r kernel.zip .
       - name: Generate release tag
         id: tag
-        run: echo "::set-output name=release_tag::AOSPA_STOCK_GKI_$(date +"%Y.%m.%d")"
+        run: echo "::set-output name=release_tag::XIAOMI_MARBLE_KERNEL_$(date +"%Y.%m.%d")"
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: /home/runner/work/aospa-gki-kernel-build/aospa-gki-kernel-build/aospa-gki-kernel.zip
+          files: android_device_xiaomi_marble-kernel/release/kernel.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-ksu:
     runs-on: ubuntu-latest
     steps:
       - name: "Setup build environment"
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, sync, and build"
-        run: repo init -u https://github.com/pa-gr/kernel_manifest -b android12-5.10-marble --depth=1 && repo sync && cd common && curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash - && cd ../ && ./build.sh -t -c && mv aospa-gki-marble-*.zip aospa-gki-kernel-ksu.zip
+      - name: "Clone repo, setup KernelSU, build kernel"
+        run: |
+          git clone -b uvite https://github.com/AOSPA/android_device_xiaomi_marble-kernel.git
+          cd android_device_xiaomi_marble-kernel
+          cd common
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+          cd ..
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make defconfig
+          make -j$(nproc)
+          mkdir release
+          cp arch/arm64/boot/Image.gz-dtb release/
+          cd release
+          zip -r kernel-ksu.zip .
       - name: Generate release tag
         id: tag
-        run: echo "::set-output name=release_tag::AOSPA_KSU_GKI_$(date +"%Y.%m.%d")"
+        run: echo "::set-output name=release_tag::XIAOMI_MARBLE_KSU_KERNEL_$(date +"%Y.%m.%d")"
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: /home/runner/work/aospa-gki-kernel-build/aospa-gki-kernel-build/aospa-gki-kernel-ksu.zip
+          files: android_device_xiaomi_marble-kernel/release/kernel-ksu.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
