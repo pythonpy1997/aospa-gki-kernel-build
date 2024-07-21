@@ -1,3 +1,4 @@
+
 name: build-kernel
 on:
   push:
@@ -36,9 +37,8 @@ jobs:
       - name: "Clone repo, sync, and build"
         run: |
           git clone -b uvite https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
-          cd android_device_xiaomi_marble-kernel/common
+          cd android_device_xiaomi_marble-kernel
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-          cd ../
           ./build.sh -t -c
           mv aospa-gki-marble-*.zip aospa-gki-kernel-ksu.zip
       - name: Generate release tag
