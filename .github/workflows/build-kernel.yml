@@ -1,4 +1,3 @@
-
 name: build-kernel
 on:
   push:
@@ -18,6 +17,10 @@ jobs:
           git clone -b uvite https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel
           ./build.sh -t -c
+          if [ ! -d "drivers/" ]; then
+            echo "Error: 'drivers/' directory not found."
+            exit 127
+          fi
           mv aospa-gki-marble-*.zip aospa-gki-kernel.zip
       - name: Generate release tag
         id: tag
@@ -40,6 +43,10 @@ jobs:
           cd android_device_xiaomi_marble-kernel
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
           ./build.sh -t -c
+          if [ ! -d "drivers/" ]; then
+            echo "Error: 'drivers/' directory not found."
+            exit 127
+          fi
           mv aospa-gki-marble-*.zip aospa-gki-kernel-ksu.zip
       - name: Generate release tag
         id: tag
