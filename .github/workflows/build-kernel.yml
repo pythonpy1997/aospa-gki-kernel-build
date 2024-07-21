@@ -12,56 +12,44 @@ jobs:
     steps:
       - name: "Setup build environment"
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, build kernel"
+      - name: "Clone repo and build"
         run: |
-          git clone -b uvite https://github.com/AOSPA/android_device_xiaomi_marble-kernel.git
+          git clone -b A14 https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          make defconfig
-          make -j$(nproc)
-          mkdir release
-          cp arch/arm64/boot/Image.gz-dtb release/
-          cd release
-          zip -r kernel.zip .
+          # Assuming defconfig is located in arch/arm64/configs/
+          make ARCH=arm64 xiaomi_marble_defconfig
+          make ARCH=arm64 -j$(nproc)
       - name: Generate release tag
         id: tag
-        run: echo "::set-output name=release_tag::XIAOMI_MARBLE_KERNEL_$(date +"%Y.%m.%d")"
+        run: echo "::set-output name=release_tag::AOSPA_STOCK_GKI_$(date +"%Y.%m.%d")"
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: android_device_xiaomi_marble-kernel/release/kernel.zip
+          files: android_device_xiaomi_marble-kernel/arch/arm64/boot/Image.gz-dtb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-ksu:
     runs-on: ubuntu-latest
     steps:
       - name: "Setup build environment"
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, setup KernelSU, build kernel"
+      - name: "Clone repo and build with KSU"
         run: |
-          git clone -b uvite https://github.com/AOSPA/android_device_xiaomi_marble-kernel.git
+          git clone -b A14 https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel
+          # Assuming defconfig is located in arch/arm64/configs/
+          make ARCH=arm64 xiaomi_marble_defconfig
+          # Apply KSU patches if necessary
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          make defconfig
-          make -j$(nproc)
-          mkdir release
-          cp arch/arm64/boot/Image.gz-dtb release/
-          cd release
-          zip -r kernel-ksu.zip .
+          make ARCH=arm64 -j$(nproc)
       - name: Generate release tag
         id: tag
-        run: echo "::set-output name=release_tag::XIAOMI_MARBLE_KSU_KERNEL_$(date +"%Y.%m.%d")"
+        run: echo "::set-output name=release_tag::AOSPA_KSU_GKI_$(date +"%Y.%m.%d")"
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: android_device_xiaomi_marble-kernel/release/kernel-ksu.zip
+          files: android_device_xiaomi_marble-kernel/arch/arm64/boot/Image.gz-dtb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
