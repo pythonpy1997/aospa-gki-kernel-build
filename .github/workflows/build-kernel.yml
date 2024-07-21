@@ -1,4 +1,3 @@
-
 name: build-kernel
 on:
   push:
@@ -15,7 +14,7 @@ jobs:
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
       - name: "Clone repo and build"
         run: |
-          git clone -b udc-14 https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
+          git clone -b uvite https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel
           ./build.sh -t -c
           mv aospa-gki-marble-*.zip aospa-gki-kernel.zip
@@ -36,7 +35,7 @@ jobs:
         run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
       - name: "Clone repo, sync, and build"
         run: |
-          git clone -b udc-14 https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
+          git clone -b uvite https://github.com/pythonpy1997/android_device_xiaomi_marble-kernel.git
           cd android_device_xiaomi_marble-kernel/common
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
           cd ../
