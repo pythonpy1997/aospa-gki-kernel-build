@@ -47,7 +47,7 @@ jobs:
           cp kernel/arch/arm64/boot/dts/*.dtb output/ || true
 
       - name: 📤 Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kernel-image
           path: output/
