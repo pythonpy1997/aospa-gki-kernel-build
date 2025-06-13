@@ -1,43 +1,53 @@
-name: build-kernel
+name: Build AOSPA GKI Kernel with KernelSU-Next
+
 on:
-  push:
-    branches: 
-      - main
-    tags:
-      - '*'
   workflow_dispatch:
+
 jobs:
-  build-stock:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Setup build environment"
-        run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, sync, and build"
-        run: repo init -u https://github.com/pa-gr/kernel_manifest -b android12-5.10-marble --depth=1 && repo sync && ./build.sh -t -c && mv aospa-gki-marble-*.zip aospa-gki-kernel.zip
-      - name: Generate release tag
-        id: tag
-        run: echo "::set-output name=release_tag::AOSPA_STOCK_GKI_$(date +"%Y.%m.%d")"
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: 🛠️ Setup Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev \
+            libncurses-dev dwarves cpio python3 git unzip
+
+      - name: ⬇️ Clone Toolchain
+        run: |
+          git clone --depth=1 https://github.com/ClangBuiltLinux/linux-toybox clang
+          export PATH="$PWD/clang/bin:$PATH"
+
+      - name: ⬇️ Clone KernelSU-Next
+        run: |
+          git clone --depth=1 https://github.com/KernelSU-Next/KernelSU-Next ksu-next
+
+      - name: 🔧 Apply KernelSU-Next Patch
+        run: |
+          cd ksu-next
+          ./setup.sh ../kernel
+
+      - name: 🧩 Build Kernel with KSU-Next
+        run: |
+          cd kernel
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
+          make vendor/gki_defconfig
+          make -j$(nproc)
+
+      - name: 📦 Package Kernel Image
+        run: |
+          mkdir -p output
+          cp kernel/arch/arm64/boot/Image output/Image
+          cp kernel/arch/arm64/boot/dts/*.dtb output/ || true
+
+      - name: 📤 Upload Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: /home/runner/work/aospa-gki-kernel-build/aospa-gki-kernel-build/aospa-gki-kernel.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build-ksu:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Setup build environment"
-        run: curl https://raw.githubusercontent.com/akhilnarang/scripts/master/setup/android_build_env.sh | bash -
-      - name: "Clone repo, sync, and build"
-        run: repo init -u https://github.com/pa-gr/kernel_manifest -b android12-5.10-marble --depth=1 && repo sync && cd common && curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash - && cd ../ && ./build.sh -t -c && mv aospa-gki-marble-*.zip aospa-gki-kernel-ksu.zip
-      - name: Generate release tag
-        id: tag
-        run: echo "::set-output name=release_tag::AOSPA_KSU_GKI_$(date +"%Y.%m.%d")"
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: /home/runner/work/aospa-gki-kernel-build/aospa-gki-kernel-build/aospa-gki-kernel-ksu.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          name: kernel-image
+          path: output/
