@@ -22,14 +22,14 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang
 
-      - name: ⬇️ Clone KernelSU-Next
+      - name: 🔧 Add KernelSU-Next to Kernel Tree
         run: |
-          git clone --depth=1 https://github.com/KernelSU-Next/KernelSU-Next ksu-next
-
-      - name: 🔧 Apply KernelSU-Next Patch
-        run: |
-          cd ksu-next
-          ./setup.sh ../kernel
+          cd kernel
+          git config --global user.email "you@example.com"
+          git config --global user.name "GitHub Actions"
+          git remote add ksu-next https://github.com/KernelSU-Next/KernelSU-Next
+          git fetch ksu-next
+          git subtree add --prefix=KernelSU ksu-next/main
 
       - name: 🧩 Build Kernel with KernelSU-Next
         run: |
