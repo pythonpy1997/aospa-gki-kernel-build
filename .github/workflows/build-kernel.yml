@@ -8,18 +8,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📦 Checkout Repository
+      - name: 📦 Checkout Kernel Source
         uses: actions/checkout@v3
 
-      - name: 🛠️ Setup Build Environment
+      - name: 🛠️ Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc bison flex libssl-dev \
+          sudo apt-get install -y \
+            build-essential bc bison flex libssl-dev \
             libncurses-dev dwarves cpio python3 git unzip
 
-      - name: ⬇️ Clone Prebuilt AOSP Clang Toolchain
+      - name: ⬇️ Clone Proton Clang Toolchain
         run: |
-          git clone --depth=1 https://github.com/arter97/clang-built.git clang
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang
 
       - name: ⬇️ Clone KernelSU-Next
         run: |
@@ -35,20 +36,20 @@ jobs:
           cd kernel
           export ARCH=arm64
           export SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
           export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
           export CC=clang
+          export CROSS_COMPILE=aarch64-linux-gnu-
           make vendor/gki_defconfig
           make -j$(nproc)
 
       - name: 📦 Package Kernel Image
         run: |
           mkdir -p output
-          cp kernel/arch/arm64/boot/Image output/Image || true
-          cp kernel/arch/arm64/boot/dts/*.dtb output/ || true
+          cp kernel/arch/arm64/boot/Image output/ || true
+          find kernel/arch/arm64/boot/ -name '*.dtb*' -exec cp {} output/ \; || true
 
-      - name: 📤 Upload Artifacts
+      - name: 📤 Upload Kernel Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-image
+          name: kernel-output
           path: output/
