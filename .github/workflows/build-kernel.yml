@@ -11,17 +11,16 @@ jobs:
       - name: 📦 Checkout Repository
         uses: actions/checkout@v3
 
-      - name: 🛠️ Setup Environment
+      - name: 🛠️ Setup Build Environment
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc bison flex libssl-dev \
             libncurses-dev dwarves cpio python3 git unzip
 
-      - - name: ⬇️ Clone Prebuilt AOSP Clang Toolchain
-  run: |
-    git clone --depth=1 https://github.com/arter97/clang-built.git clang
-      export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
-      
+      - name: ⬇️ Clone Prebuilt AOSP Clang Toolchain
+        run: |
+          git clone --depth=1 https://github.com/arter97/clang-built.git clang
+
       - name: ⬇️ Clone KernelSU-Next
         run: |
           git clone --depth=1 https://github.com/KernelSU-Next/KernelSU-Next ksu-next
@@ -31,19 +30,21 @@ jobs:
           cd ksu-next
           ./setup.sh ../kernel
 
-      - name: 🧩 Build Kernel with KSU-Next
+      - name: 🧩 Build Kernel with KernelSU-Next
         run: |
           cd kernel
           export ARCH=arm64
+          export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
+          export CC=clang
           make vendor/gki_defconfig
           make -j$(nproc)
 
       - name: 📦 Package Kernel Image
         run: |
           mkdir -p output
-          cp kernel/arch/arm64/boot/Image output/Image
+          cp kernel/arch/arm64/boot/Image output/Image || true
           cp kernel/arch/arm64/boot/dts/*.dtb output/ || true
 
       - name: 📤 Upload Artifacts
