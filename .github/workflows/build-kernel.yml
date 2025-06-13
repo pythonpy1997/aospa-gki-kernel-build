@@ -17,11 +17,11 @@ jobs:
           sudo apt-get install -y build-essential bc bison flex libssl-dev \
             libncurses-dev dwarves cpio python3 git unzip
 
-      - name: ⬇️ Clone Toolchain
-        run: |
-          git clone --depth=1 https://github.com/ClangBuiltLinux/linux-toybox clang
-          export PATH="$PWD/clang/bin:$PATH"
-
+      - - name: ⬇️ Clone Prebuilt AOSP Clang Toolchain
+  run: |
+    git clone --depth=1 https://github.com/arter97/clang-built.git clang
+      export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+      
       - name: ⬇️ Clone KernelSU-Next
         run: |
           git clone --depth=1 https://github.com/KernelSU-Next/KernelSU-Next ksu-next
